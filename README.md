@@ -83,7 +83,7 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
             task = PyTask(func=add, args=(1,), kwargs={'b': 2})
             queue.enqueue(task)
             ```
-        4. Enqueue a predefined task function without importing it:
+        4. Enqueue a predefined task function without importing it (the fastest and lightest way):
 
             ```python
             from delayed.task import PyTask
@@ -102,7 +102,7 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
             task = GoTask(func_path='fmt.Printf', args=('%d %s\n', [1, 'test']))  # the variadic argument needs to be a list or tuple
             queue.enqueue(task)
 
-            task = GoTask('fmt.Println', (1, 'test'))  # // if the variadic argument is the only argument, it's not required to wrap it with a list or tuple
+            task = GoTask('fmt.Println', (1, 'test'))  # if the variadic argument is the only argument, it's not required to wrap it with a list or tuple
             queue.enqueue(task)
         ```
 
