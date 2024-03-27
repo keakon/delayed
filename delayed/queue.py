@@ -113,7 +113,7 @@ class Queue(object):
             int: The requeued task count.
         """
         count = self._requeue_lost_script(
-            keys=(self._name, self._noti_key, self._processing_key, self._worker_id))
+            keys=(self._name, self._noti_key, self._processing_key))
         if count >= 1:
             if count == 1:
                 logger.debug('Requeued 1 lost task.')

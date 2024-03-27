@@ -1,6 +1,6 @@
 # delayed
-[![Build status](https://travis-ci.org/yizhisec/delayed.svg?branch=master)](https://secure.travis-ci.org/yizhisec/delayed)
-[![Coverage](https://codecov.io/gh/yizhisec/delayed/branch/master/graph/badge.svg)](https://codecov.io/gh/yizhisec/delayed)
+[![Build Status](https://github.com/keakon/delayed/actions/workflows/python.yml/badge.svg)](https://github.com/keakon/delayed/actions)
+[![Coverage](https://codecov.io/gh/keakon/delayed/branch/master/graph/badge.svg)](https://codecov.io/gh/keakon/delayed)
 
 Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org/).
 
@@ -9,7 +9,7 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
 * Robust: all the enqueued tasks will run exactly once, even if the worker got killed at any time.
 * Clean: finished tasks (including failed) take no space of your Redis.
 * Distributed: workers as more as needed can run in the same time without further config.
-* Portable: its [Go](https://github.com/yizhisec/go-delayed) and [Python](https://github.com/yizhisec/delayed) version can call each other.
+* Portable: its [Go](https://github.com/keakon/go-delayed) and [Python](https://github.com/keakon/delayed) version can call each other.
 
 ## Requirements
 
