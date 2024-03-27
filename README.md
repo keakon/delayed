@@ -13,7 +13,7 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
 
 ## Requirements
 
-1. Python 3.5 or later, tested on CPython 3.5 - 3.12. Versions before 1.0 have also been tested on CPython 2.7, PyPy and PyPy3.
+1. Python 3.7 or later, tested on CPython 3.7 - 3.12. Versions before 1.0 have also been tested on CPython 2.7, PyPy and PyPy3.
 2. To gracefully stop the workers, Unix-like systems (with Unix signal) are required, tested on Ubuntu 22.04 and macOS Monterey 12.
 3. Redis 2.6.0 or later (with Lua scripts).
 
