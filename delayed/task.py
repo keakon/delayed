@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from importlib import import_module
+from typing import Any, Callable, Optional, Union
 
 from msgpack import packb, unpackb
 
@@ -8,7 +9,7 @@ from .constants import SEP
 from .logger import logger
 
 
-class PyTask(object):
+class PyTask:
     """PyTask is the class of a Python task.
 
     Args:
@@ -21,7 +22,7 @@ class PyTask(object):
 
     __slots__ = ['_func_path', '_args', '_kwargs', '_data']
 
-    def __init__(self, func, args=None, kwargs=None):
+    def __init__(self, func: Union[Callable, str], args: Union[list, tuple, None] = None, kwargs: Optional[dict] = None):
         if isinstance(func, str):
             self._func_path = func
         elif callable(func):
@@ -32,7 +33,7 @@ class PyTask(object):
         self._kwargs = {} if kwargs is None else kwargs
         self._data = None
 
-    def serialize(self):
+    def serialize(self) -> Optional[bytes]:
         """Serializes the task to bytes.
 
         Returns:
@@ -52,7 +53,7 @@ class PyTask(object):
         return self._data
 
     @classmethod
-    def deserialize(cls, data):
+    def deserialize(cls, data) -> 'PyTask':
         """Deserialize a task from the bytes.
 
         Args:
@@ -65,7 +66,7 @@ class PyTask(object):
         task._data = data
         return task
 
-    def execute(self):
+    def execute(self) -> Any:
         """Executes the task.
 
         Returns:
@@ -78,7 +79,7 @@ class PyTask(object):
         return func(*self._args, **self._kwargs)
 
 
-class GoTask(object):
+class GoTask:
     """GoTask is the class of a Go task.
 
     Args:
@@ -90,13 +91,13 @@ class GoTask(object):
 
     __slots__ = ['_func_path', '_args', '_payload', '_data']
 
-    def __init__(self, func_path, args=None):
+    def __init__(self, func_path: str, args: Optional[list] = None):
         self._func_path = func_path
         self._args = args
         self._payload = None
         self._data = None
 
-    def serialize(self):
+    def serialize(self) -> Optional[bytes]:
         """Serializes the task to bytes.
 
         Returns:

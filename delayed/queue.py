@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+from typing import Optional, Union
+
+import redis
+
 from .logger import logger
 from .task import PyTask
 
@@ -40,7 +44,7 @@ _NOTI_KEY_SUFFIX = '_noti'
 _PROCESSING_KEY_SUFFIX = '_processing'
 
 
-class Queue(object):
+class Queue:
     """Queue is the class of a task queue.
 
     Args:
@@ -51,8 +55,8 @@ class Queue(object):
         keep_alive_timeout (int or float): The keep alive timeout in seconds of the worker.
     """
 
-    def __init__(self, name, conn, dequeue_timeout=1, keep_alive_timeout=60):
-        self._worker_id = None
+    def __init__(self, name: str, conn: redis.Redis, dequeue_timeout: Union[int, float] = 1, keep_alive_timeout: Union[int, float] = 60):
+        self._worker_id: Optional[bytes] = None
         self._name = name
         self._noti_key = name + _NOTI_KEY_SUFFIX
         self._processing_key = name + _PROCESSING_KEY_SUFFIX
@@ -62,7 +66,7 @@ class Queue(object):
         self._dequeue_script = conn.register_script(_DEQUEUE_SCRIPT)
         self._requeue_lost_script = conn.register_script(_REQUEUE_LOST_SCRIPT)
 
-    def enqueue(self, task):
+    def enqueue(self, task: PyTask):
         """Enqueues a task to the queue.
 
         Args:
@@ -76,7 +80,7 @@ class Queue(object):
             pipe.execute()
         logger.debug('Enqueued task %s.', task._func_path)
 
-    def dequeue(self):
+    def dequeue(self) -> Optional[PyTask]:
         """Dequeues a task from the queue.
 
         Returns:
@@ -100,11 +104,11 @@ class Queue(object):
         self._conn.hdel(self._processing_key, self._worker_id)
         logger.debug('Released the task of worker %s.', self._worker_id)
 
-    def len(self):
+    def len(self) -> int:
         """Returns the length of the queue."""
         return self._conn.llen(self._name)
 
-    def requeue_lost(self):
+    def requeue_lost(self) -> int:
         """Requeues lost tasks.
         It should be called periodically to prevent losing tasks.
         The lost tasks were those popped from the queue, but its dead worker hadn't released it.
@@ -114,6 +118,7 @@ class Queue(object):
         """
         count = self._requeue_lost_script(
             keys=(self._name, self._noti_key, self._processing_key))
+        logger.debug(type(count))
         if count >= 1:
             if count == 1:
                 logger.debug('Requeued 1 lost task.')

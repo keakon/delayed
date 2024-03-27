@@ -5,13 +5,15 @@ import os
 import signal
 import threading
 import time
+from typing import Union
 
 from .constants import DEFAULT_SLEEP_TIME, MAX_SLEEP_TIME, Status
 from .keep_alive import KeepAliveThread
 from .logger import logger
+from .queue import Queue
+from .task import PyTask
 
-
-class Worker(object):
+class Worker:
     """Worker is the class of Python task worker.
 
     Args:
@@ -19,7 +21,7 @@ class Worker(object):
         keep_alive_interval (int or float): The worker marks itself as alive for every `keep_alive_interval` seconds.
     """
 
-    def __init__(self, queue, keep_alive_interval=15):
+    def __init__(self, queue: Queue, keep_alive_interval: Union[int, float] = 15):
         queue._worker_id = self._id = binascii.hexlify(os.urandom(16))
         self._queue = queue
         self._keep_alive_interval = keep_alive_interval
@@ -70,7 +72,7 @@ class Worker(object):
             logger.debug('Stopping worker %s.', self._id)
             self._status = Status.STOPPING
 
-    def _requeue_task(self, task):
+    def _requeue_task(self, task: PyTask):
         """Requeues a dequeued task.
 
         Args:

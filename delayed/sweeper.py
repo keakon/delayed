@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
 import time
+from typing import Union
 
 from .constants import Status
 from .logger import logger
+from .queue import Queue
 
 
-class Sweeper(object):
+class Sweeper:
     """Sweeper keeps recovering lost tasks.
 
     Args:
@@ -15,7 +17,7 @@ class Sweeper(object):
             It tries to requeue lost tasks every `interval` seconds.
     """
 
-    def __init__(self, queues, interval=60):
+    def __init__(self, queues: list[Queue], interval: Union[int, float] = 60):
         self._queues = queues
         self._interval = interval
         self._status = Status.STOPPED

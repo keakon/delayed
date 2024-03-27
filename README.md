@@ -13,7 +13,7 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
 
 ## Requirements
 
-1. Python 2.7 or later, tested on CPython 2.7, 3.5 - 3.11. Versions before 1.0 also have been tested on PyPy and PyPy3.
+1. Python 3.5 or later, tested on CPython 3.5 - 3.12. Versions before 1.0 have also been tested on CPython 2.7, PyPy and PyPy3.
 2. To gracefully stop the workers, Unix-like systems (with Unix signal) are required, tested on Ubuntu 22.04 and macOS Monterey 12.
 3. Redis 2.6.0 or later (with Lua scripts).
 
@@ -178,16 +178,17 @@ A: Adds a `logging.DEBUG` level handler to `delayed.logger.logger`. The simplest
 ## Release notes
 
 * 1.0:
-    1. Supports Go, adds `GoTask`.
-    2. Use MessagePack instead of pickle to serialize / deserialize tasks. (BREAKING CHANGE)
-    3. Removes `ForkedWorker` and `PreforkedWorker`. You can use `Worker` instead. (BREAKING CHANGE)
-    4. Changes params of `Queue()`, removes `default_timeout`, `requeue_timeout` and `busy_len`, adds `dequeue_timeout` and `keep_alive_timeout`. (BREAKING CHANGE)
-    5. Rename `Task` to `PyTask`. (BREAKING CHANGE)
-    6. Removes those properties of `PyTask`: `id`, `func_path`, `args` and `kwargs`. (BREAKING CHANGE)
-    7. Removes those params of `PyTask()`: `id`, `timeout`, `prior` and `error_handler_path`. (BREAKING CHANGE)
-    8. Removes `PyTask.create()`. You can use `PyTask()` instead. (BREAKING CHANGE)
-    9. Rename `func_path` param of `PyTask()` to `func`, it accepts both `callable` and `str`. (BREAKING CHANGE)
-    10. Removes `delayed.delay()`. Removes params of `delayed.delayed()`. (BREAKING CHANGE)
+    1. Python 2.7 is not supported anymore. (BREAKING CHANGE)
+    2. Supports Go, adds `GoTask`.
+    3. Use MessagePack instead of pickle to serialize / deserialize tasks. (BREAKING CHANGE)
+    4. Removes `ForkedWorker` and `PreforkedWorker`. You can use `Worker` instead. (BREAKING CHANGE)
+    5. Changes params of `Queue()`, removes `default_timeout`, `requeue_timeout` and `busy_len`, adds `dequeue_timeout` and `keep_alive_timeout`. (BREAKING CHANGE)
+    6. Rename `Task` to `PyTask`. (BREAKING CHANGE)
+    7. Removes those properties of `PyTask`: `id`, `func_path`, `args` and `kwargs`. (BREAKING CHANGE)
+    8. Removes those params of `PyTask()`: `id`, `timeout`, `prior` and `error_handler_path`. (BREAKING CHANGE)
+    9. Removes `PyTask.create()`. You can use `PyTask()` instead. (BREAKING CHANGE)
+    10. Rename `func_path` param of `PyTask()` to `func`, it accepts both `callable` and `str`. (BREAKING CHANGE)
+    11. Removes `delayed.delay()`. Removes params of `delayed.delayed()`. (BREAKING CHANGE)
 
 * 0.11:
     1. Sleeps random time when a `Worker` fails to pop a `task` before retrying.

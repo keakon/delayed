@@ -19,7 +19,7 @@ def set_handler(handler):
     logger.handlers = [handler]
 
 
-def setup_logger(date_format=DEFAULT_DATE_FORMAT, log_format=DEFAULT_LOG_FORMAT):
+def setup_logger(date_format: str = DEFAULT_DATE_FORMAT, log_format: str = DEFAULT_LOG_FORMAT):
     """Setup a console logger.
 
     Args:
@@ -36,7 +36,7 @@ def setup_logger(date_format=DEFAULT_DATE_FORMAT, log_format=DEFAULT_LOG_FORMAT)
         logger.addHandler(handler)
 
 
-def _setup_handler(handler, date_format, log_format):
+def _setup_handler(handler, date_format: str, log_format: str):
     """Setup a handler for the logger.
 
     Args:
