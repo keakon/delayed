@@ -6,7 +6,7 @@ import signal
 import sys
 import threading
 import time
-import traceback
+import sys
 from typing import Union
 
 from .constants import DEFAULT_SLEEP_TIME, MAX_SLEEP_TIME, Status
@@ -58,12 +58,25 @@ class Worker:
                         except Exception:
                             logger.exception('Failed to execute task %s.', task._func_path)
 
+                            need_retry = False
                             _, _, exc_traceback = sys.exc_info()
-                            if len(traceback.format_tb(exc_traceback)) > 2:
+                            if exc_traceback:
+                                tb_next = exc_traceback.tb_next
+                                if tb_next:
+                                    tb_next2 = tb_next.tb_next
+                                    if tb_next2:
+                                        # invalid call, should not be retried
+                                        need_retry = True
+                                        # delete tracebacks to avoid memory leak
+                                        del tb_next2
+                                    del tb_next
+                                del exc_traceback
+
+                            if need_retry:
                                 self._requeue_task(task)
                             else:
-                                # invalid call, should not be retried
                                 self._release_task()
+                            self._release_task()
                         else:
                             self._release_task()
         finally:
