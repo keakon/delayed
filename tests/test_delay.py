@@ -17,5 +17,6 @@ def test_delayed():
     delayed_func.delay(1, 2)
     assert QUEUE.len() == 1
     task = QUEUE.dequeue()
+    assert task is not None
     assert task.execute() == 3
     QUEUE.release()

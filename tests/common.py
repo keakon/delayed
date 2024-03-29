@@ -16,6 +16,8 @@ QUEUE = Queue(QUEUE_NAME, CONN, 0.01)
 WORKER = Worker(QUEUE)
 DELAYED = delayed(QUEUE)
 
+WORKER.generate_id()
+
 
 def func(a, b):
     return a + b

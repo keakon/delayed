@@ -1,11 +1,15 @@
 import threading
+from typing import TYPE_CHECKING
 
 from .constants import Status
 from .logger import logger
 
+if TYPE_CHECKING:
+    from .worker import Worker
+
 
 class KeepAliveThread(threading.Thread):
-    def __init__(self, worker):
+    def __init__(self, worker: 'Worker'):
         super(KeepAliveThread, self).__init__()
         self._worker = worker
 
@@ -20,4 +24,4 @@ class KeepAliveThread(threading.Thread):
                 logger.exception('Failed to keep alive.')
             with worker._cond:
                 worker._cond.wait(interval)
-        queue._die()
+        queue.go_offline()

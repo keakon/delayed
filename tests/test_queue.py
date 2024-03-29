@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from delayed.queue import Queue
 from delayed.task import GoTask, PyTask
 
 from .common import CONN, func, NOTI_KEY, PROCESSING_KEY, QUEUE, QUEUE_NAME
 
 
-class TestQueue(object):
+class TestQueue:
     def test_enqueue(self):
         CONN.delete(QUEUE_NAME, NOTI_KEY)
 
@@ -39,6 +40,7 @@ class TestQueue(object):
         QUEUE.enqueue(task3)
 
         task = QUEUE.dequeue()
+        assert task is not None
         assert CONN.llen(QUEUE_NAME) == 2
         assert CONN.llen(NOTI_KEY) == 2
         assert CONN.hget(PROCESSING_KEY, QUEUE._worker_id) == task._data
@@ -47,6 +49,7 @@ class TestQueue(object):
         assert task._kwargs == {}
 
         task = QUEUE.dequeue()
+        assert task is not None
         assert CONN.llen(QUEUE_NAME) == 1
         assert CONN.llen(NOTI_KEY) == 1
         assert CONN.hget(PROCESSING_KEY, QUEUE._worker_id) == task._data
@@ -55,6 +58,7 @@ class TestQueue(object):
         assert task._kwargs == {'b': 4}
 
         task = QUEUE.dequeue()
+        assert task is not None
         assert CONN.llen(QUEUE_NAME) == 0
         assert CONN.llen(NOTI_KEY) == 0
         assert CONN.hget(PROCESSING_KEY, QUEUE._worker_id) == task._data
@@ -100,13 +104,33 @@ class TestQueue(object):
         assert QUEUE.requeue_lost() == 0
 
         QUEUE.dequeue()
+        # WORKER.generate_id() set the queue to online for at least 1 second.
+        # It prevents the queue to go offline in the middle of the test.
+        QUEUE.go_offline()
         assert QUEUE.requeue_lost() == 1
         assert QUEUE.len() == 1
 
         QUEUE.keep_alive()
         QUEUE.dequeue()
         assert QUEUE.requeue_lost() == 0
-        QUEUE._die()
+        QUEUE.go_offline()
         assert QUEUE.requeue_lost() == 1
 
         CONN.delete(QUEUE_NAME, NOTI_KEY, PROCESSING_KEY)
+
+    def test_try_online(self):
+        QUEUE.go_offline()
+        assert QUEUE.try_online()
+        assert not QUEUE.try_online()
+
+        QUEUE.go_offline()
+        assert QUEUE.try_online()
+
+        queue = Queue(QUEUE_NAME, CONN, 0.01)
+        queue._worker_id = QUEUE._worker_id
+        assert not queue.try_online()
+
+        QUEUE.go_offline()
+        assert queue.try_online()
+
+        queue.go_offline()

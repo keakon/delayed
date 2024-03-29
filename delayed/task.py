@@ -22,7 +22,12 @@ class PyTask:
 
     __slots__ = ['_func_path', '_args', '_kwargs', '_data']
 
-    def __init__(self, func: Union[Callable, str], args: Union[list, tuple, None] = None, kwargs: Optional[dict] = None):
+    def __init__(
+        self,
+        func: Union[Callable, str],
+        args: Union[list, tuple, None] = None,
+        kwargs: Optional[dict] = None
+    ):
         if isinstance(func, str):
             self._func_path = func
         elif callable(func):
@@ -91,7 +96,7 @@ class GoTask:
 
     __slots__ = ['_func_path', '_args', '_payload', '_data']
 
-    def __init__(self, func_path: str, args: Optional[list] = None):
+    def __init__(self, func_path: str, args: Any = None):
         self._func_path = func_path
         self._args = args
         self._payload = None

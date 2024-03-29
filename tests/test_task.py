@@ -5,7 +5,7 @@ from delayed.task import GoTask, PyTask
 from .common import func
 
 
-class TestPyTask(object):
+class TestPyTask:
     def test_create(self):
         task = PyTask(func, (1, 2))
         assert task._func_path == 'tests.common:func'
@@ -44,7 +44,7 @@ class TestPyTask(object):
         assert task.execute() == 3
 
 
-class TestGoTask(object):
+class TestGoTask:
     def test_create(self):
         task = GoTask('test.Func', (1, 2))
         assert task._func_path == 'test.Func'

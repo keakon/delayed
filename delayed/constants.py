@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
-class Status(object):
+class Status:
     (
         STOPPED,
         RUNNING,

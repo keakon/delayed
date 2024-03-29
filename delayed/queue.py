@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from math import ceil
 from typing import Optional, Union
 
 import redis
 
 from .logger import logger
-from .task import PyTask
+from .task import GoTask, PyTask
 
 
 # KEYS: queue_name, processing_key
@@ -55,8 +56,13 @@ class Queue:
         keep_alive_timeout (int or float): The keep alive timeout in seconds of the worker.
     """
 
-    def __init__(self, name: str, conn: redis.Redis, dequeue_timeout: Union[int, float] = 1, keep_alive_timeout: Union[int, float] = 60):
-        self._worker_id: Optional[bytes] = None
+    def __init__(
+        self, name: str,
+        conn: redis.Redis,
+        dequeue_timeout: Union[int, float] = 1,
+        keep_alive_timeout: Union[int, float] = 60
+    ):
+        self._worker_id: Optional[int] = None
         self._name = name
         self._noti_key = name + _NOTI_KEY_SUFFIX
         self._processing_key = name + _PROCESSING_KEY_SUFFIX
@@ -66,7 +72,7 @@ class Queue:
         self._dequeue_script = conn.register_script(_DEQUEUE_SCRIPT)
         self._requeue_lost_script = conn.register_script(_REQUEUE_LOST_SCRIPT)
 
-    def enqueue(self, task: PyTask):
+    def enqueue(self, task: Union[GoTask, PyTask]):
         """Enqueues a task to the queue.
 
         Args:
@@ -74,11 +80,14 @@ class Queue:
         """
         logger.debug('Enqueuing task %s.', task._func_path)
         data = task.serialize()
-        with self._conn.pipeline() as pipe:
-            pipe.rpush(self._name, data)
-            pipe.rpush(self._noti_key, '1')
-            pipe.execute()
-        logger.debug('Enqueued task %s.', task._func_path)
+        if data:
+            with self._conn.pipeline() as pipe:
+                pipe.rpush(self._name, data)
+                pipe.rpush(self._noti_key, '1')
+                pipe.execute()
+            logger.debug('Enqueued task %s.', task._func_path)
+        else:
+            logger.error('Failed to serialize task %s.', task._func_path)
 
     def dequeue(self) -> Optional[PyTask]:
         """Dequeues a task from the queue.
@@ -116,7 +125,7 @@ class Queue:
         Returns:
             int: The requeued task count.
         """
-        count = self._requeue_lost_script(
+        count: int = self._requeue_lost_script(
             keys=(self._name, self._noti_key, self._processing_key))
         if count >= 1:
             if count == 1:
@@ -130,7 +139,14 @@ class Queue:
         self._conn.setex(self._worker_id, self._keep_alive_timeout, 1)
         logger.debug('Worker %s is alive.', self._worker_id)
 
-    def _die(self):
-        """Set the worker of the queue dead."""
+    def go_offline(self):
+        """Set the worker of the queue offline."""
         self._conn.delete(self._worker_id)
-        logger.debug('Worker %s dies.', self._worker_id)
+        logger.debug('Worker %s is offline.', self._worker_id)
+
+    def try_online(self) -> bool:
+        """Try to set the worker of the queue online."""
+        if self._conn.set(self._worker_id, 1, ex=ceil(self._keep_alive_timeout), nx=True):
+            logger.debug('Worker %s is online.', self._worker_id)
+            return True
+        return False

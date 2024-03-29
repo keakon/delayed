@@ -177,6 +177,10 @@ A: Adds a `logging.DEBUG` level handler to `delayed.logger.logger`. The simplest
 
 ## Release notes
 
+* 1.1:
+    1. Adds `log_level` param to `delayed.logger.setup_logger()`.
+    2. Prevents different online workers have the same id.
+
 * 1.0:
     1. Python 2.7 is not supported anymore. (BREAKING CHANGE)
     2. Supports Go, adds `GoTask`.

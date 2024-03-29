@@ -2,10 +2,11 @@
 
 from functools import wraps
 
+from .queue import Queue
 from .task import PyTask
 
 
-def delayed(queue):
+def delayed(queue: Queue):
     """A decorator for defining task functions.
     Calling a delayed function is equivalent to call the raw function.
     Calling the delay() method of a delayed function will enqueue a task.

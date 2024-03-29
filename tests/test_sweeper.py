@@ -10,14 +10,14 @@ from delayed.task import PyTask
 from .common import CONN, func, QUEUE, QUEUE_NAME, NOTI_KEY
 
 
-class TestSweeper(object):
+class TestSweeper:
     def test_run(self):
         queue_name = 'test'
         noti_key = queue_name + _NOTI_KEY_SUFFIX
         CONN.delete(QUEUE_NAME, NOTI_KEY, queue_name, noti_key)
 
         queue = Queue('test', CONN, 0.01)
-        queue._worker_id = 'test'
+        queue._worker_id = 123
         sweeper = Sweeper([QUEUE, queue], 0.05)
 
         task = PyTask(func, (1, 2))

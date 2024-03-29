@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import binascii
-import os
+from secrets import randbits
 import signal
-import sys
-import threading
-import time
-import sys
+from sys import exc_info
+from threading import Condition
+from time import sleep
 from typing import Union
 
 from .constants import DEFAULT_SLEEP_TIME, MAX_SLEEP_TIME, Status
@@ -21,18 +19,33 @@ class Worker:
     Args:
         queue (delayed.queue.Queue): The task queue of the worker.
         keep_alive_interval (int or float): The worker marks itself as alive for every `keep_alive_interval` seconds.
+        id_bits (int): The bits used for the worker ID. The default value is 16, which is enough for 2 ** 16 workers.
     """
 
-    def __init__(self, queue: Queue, keep_alive_interval: Union[int, float] = 15):
-        queue._worker_id = self._id = binascii.hexlify(os.urandom(16))
+    def __init__(
+        self,
+        queue: Queue,
+        keep_alive_interval: Union[int, float] = 15,
+        id_bits: int = 16
+    ):
         self._queue = queue
         self._keep_alive_interval = keep_alive_interval
+        self._id_bits = id_bits
         self._status = Status.STOPPED
-        self._cond = threading.Condition()
+        self._cond = Condition()
+
+    def generate_id(self):
+        """Generates a random ID for the worker."""
+        while True:
+            self._queue._worker_id = self._id = randbits(self._id_bits)
+            if self._queue.try_online():
+                return
 
     def run(self):  # pragma: no cover
         """Runs the worker."""
-        logger.debug('Starting worker %s.', self._id)
+        self.generate_id()
+
+        logger.debug('Starting worker %d.', self._id)
         self._status = Status.RUNNING
         self._register_signals()
 
@@ -46,7 +59,7 @@ class Worker:
                     task = self._queue.dequeue()
                 except Exception:  # pragma: no cover
                     logger.exception('Failed to dequeue task.')
-                    time.sleep(sleep_time)
+                    sleep(sleep_time)
                     sleep_time *= 2
                     if sleep_time > MAX_SLEEP_TIME:
                         sleep_time = MAX_SLEEP_TIME
@@ -59,7 +72,7 @@ class Worker:
                             logger.exception('Failed to execute task %s.', task._func_path)
 
                             need_retry = False
-                            _, _, exc_traceback = sys.exc_info()
+                            _, _, exc_traceback = exc_info()
                             if exc_traceback:
                                 tb_next = exc_traceback.tb_next
                                 if tb_next:
@@ -85,12 +98,12 @@ class Worker:
             with self._cond:
                 self._cond.notify()
             thread.join()
-            logger.debug('Stopped worker %s.', self._id)
+            logger.debug('Stopped worker %d.', self._id)
 
     def stop(self):
         """Stops the worker."""
         if self._status == Status.RUNNING:
-            logger.debug('Stopping worker %s.', self._id)
+            logger.debug('Stopping worker %d.', self._id)
             self._status = Status.STOPPING
 
     def _requeue_task(self, task: PyTask):
@@ -110,7 +123,7 @@ class Worker:
         try:
             self._queue.release()
         except Exception:  # pragma: no cover
-            logger.exception('Failed to release task of worker %s.', self._id)
+            logger.exception('Failed to release task of worker %d.', self._id)
 
     def _register_signals(self):
         """Registers signal handlers."""
