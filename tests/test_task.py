@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from delayed.task import GoTask, PyTask
+from pytest import raises
 
-from .common import func
+from .common import func, func2
 
 
 class TestPyTask:
@@ -12,7 +13,15 @@ class TestPyTask:
         assert task._args == (1, 2)
         assert task._kwargs == {}
 
+        with raises(ValueError):
+            PyTask(1)
+
     def test_serialize_and_deserialize(self):
+        task = PyTask(func2)
+        data = task.serialize()
+        assert data is not None
+        assert data == task._data
+
         task = PyTask(func, (1, 2))
         data = task.serialize()
         assert data is not None
@@ -51,6 +60,9 @@ class TestGoTask:
         assert task._args == (1, 2)
 
     def test_serialize(self):
+        task = GoTask('test.Func')
+        assert task.serialize() is not None
+
         task = GoTask('test.Func', (1, 2))
         assert task.serialize() is not None
 

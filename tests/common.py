@@ -18,6 +18,19 @@ DELAYED = delayed(QUEUE)
 
 WORKER.generate_id()
 
+i = 0
+
 
 def func(a, b):
     return a + b
+
+
+def func2():
+    return
+
+
+def func3():
+    global i
+    i += 1
+    if i % 2:
+        raise Exception('error')

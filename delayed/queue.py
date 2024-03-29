@@ -86,7 +86,7 @@ class Queue:
                 pipe.rpush(self._noti_key, '1')
                 pipe.execute()
             logger.debug('Enqueued task %s.', task._func_path)
-        else:
+        else:  # pragma: no cover
             logger.error('Failed to serialize task %s.', task._func_path)
 
     def dequeue(self) -> Optional[PyTask]:

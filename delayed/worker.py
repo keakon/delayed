@@ -115,7 +115,7 @@ class Worker:
         logger.debug('Requeuing task %s', task._func_path)
         try:
             self._queue.enqueue(task)
-        except Exception:
+        except Exception:  # pragma: no cover
             logger.exception('Failed to requeue task %s', task._func_path)
 
     def _release_task(self):

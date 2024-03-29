@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 from .constants import Status
 from .logger import logger
 
-if TYPE_CHECKING:
+if TYPE_CHECKING:  # pragma: no cover
     from .worker import Worker
 
 

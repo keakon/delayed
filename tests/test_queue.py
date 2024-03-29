@@ -2,6 +2,7 @@
 
 from delayed.queue import Queue
 from delayed.task import GoTask, PyTask
+from delayed.worker import Worker
 
 from .common import CONN, func, NOTI_KEY, PROCESSING_KEY, QUEUE, QUEUE_NAME
 
@@ -115,6 +116,18 @@ class TestQueue:
         assert QUEUE.requeue_lost() == 0
         QUEUE.go_offline()
         assert QUEUE.requeue_lost() == 1
+
+        task = PyTask(func, (2, 3))
+        QUEUE.enqueue(task)
+        assert QUEUE.len() == 2
+
+        queue = Queue(QUEUE_NAME, CONN, 0.01)
+        worker = Worker(queue)
+        worker.generate_id()
+        queue.go_offline()
+        assert QUEUE.dequeue()
+        assert queue.dequeue()
+        assert QUEUE.requeue_lost() == 2
 
         CONN.delete(QUEUE_NAME, NOTI_KEY, PROCESSING_KEY)
 

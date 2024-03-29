@@ -7,7 +7,7 @@ from delayed.task import PyTask
 from delayed.queue import Queue
 from delayed.worker import Worker
 
-from .common import CONN, NOTI_KEY, PROCESSING_KEY, QUEUE, QUEUE_NAME, WORKER
+from .common import CONN, func3, NOTI_KEY, PROCESSING_KEY, QUEUE, QUEUE_NAME, WORKER
 
 
 def stop(pid: int):
@@ -37,8 +37,12 @@ class TestWorker:
     def test_run(self):
         CONN.delete(QUEUE_NAME, NOTI_KEY, PROCESSING_KEY)
 
+        task = PyTask(func3)
+        QUEUE.enqueue(task)
+
         task = PyTask(stop, (os.getpid(),))
         QUEUE.enqueue(task)
+
         WORKER.run()
 
         CONN.delete(QUEUE_NAME, NOTI_KEY, PROCESSING_KEY)
