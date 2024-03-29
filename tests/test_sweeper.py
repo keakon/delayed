@@ -6,6 +6,7 @@ import time
 from delayed.queue import Queue, _NOTI_KEY_SUFFIX
 from delayed.sweeper import Sweeper
 from delayed.task import PyTask
+from pytest import fail
 
 from .common import CONN, func, QUEUE, QUEUE_NAME, NOTI_KEY
 
@@ -30,19 +31,25 @@ class TestSweeper:
         thread = threading.Thread(target=sweeper.run)
         thread.start()
 
-        time.sleep(0.1)
-        task = QUEUE.dequeue()
-        assert task is not None
-        QUEUE.release()
+        try:
+            time.sleep(0.1)
+            task = QUEUE.dequeue()
+            assert task is not None
+            QUEUE.release()
 
-        task2 = PyTask(func, (1, 2))
-        queue.enqueue(task2)
-        CONN.lpop(noti_key)
+            task2 = PyTask(func, (1, 2))
+            queue.enqueue(task2)
+            CONN.lpop(noti_key)
 
-        time.sleep(0.1)
-        task2 = queue.dequeue()
-        assert task2 is not None
-        queue.release()
+            for _ in range(10):  # retry for slow machines
+                time.sleep(0.1)
+                task2 = queue.dequeue()
+                if task2 is not None:
+                    break
+            else:
+                fail('task2 is None')
 
-        sweeper.stop()
-        thread.join()
+            queue.release()
+        finally:
+            sweeper.stop()
+            thread.join()
