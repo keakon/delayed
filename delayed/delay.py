@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from typing import Callable, Optional
 from functools import wraps
 
 from .queue import Queue
@@ -17,12 +18,23 @@ def delayed(queue: Queue):
     Returns:
         callable: A decorator.
     """
-    def wrapper(func):
-        @wraps(func)
-        def _delay(*args, **kwargs):
-            task = PyTask(func, args, kwargs)
-            queue.enqueue(task)
+    def wrapper(func: Optional[Callable] = None, *, retry: int = 0):
+        if func:
+            @wraps(func)
+            def _delay(*args, **kwargs):
+                task = PyTask(func, args, kwargs, retry)
+                queue.enqueue(task)
 
-        func.delay = _delay
-        return func
+            func.delay = _delay
+            return func
+        else:
+            def inner(func: Callable):
+                @wraps(func)
+                def _delay(*args, **kwargs):
+                    task = PyTask(func, args, kwargs, retry)
+                    queue.enqueue(task)
+
+                func.delay = _delay
+                return func
+            return inner
     return wrapper

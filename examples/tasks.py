@@ -12,7 +12,7 @@ from .client import queue
 setup_logger()
 
 DELAYED = delayed(queue)
-
+i = 0
 
 def func1(*args, **kwargs):
     logger.info(os.getpid())
@@ -23,3 +23,10 @@ def func1(*args, **kwargs):
 def func2(*args, **kwargs):
     logger.info(os.getpid())
     time.sleep(1)
+
+@DELAYED(retry=3)
+def func3():
+    global i
+    i += 1
+    if i % 2:
+        raise Exception('error')

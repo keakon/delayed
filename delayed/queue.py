@@ -72,11 +72,12 @@ class Queue:
         self._dequeue_script = conn.register_script(_DEQUEUE_SCRIPT)
         self._requeue_lost_script = conn.register_script(_REQUEUE_LOST_SCRIPT)
 
-    def enqueue(self, task: Union[GoTask, PyTask]):
+    def enqueue(self, task: Union[GoTask, PyTask], release=False):
         """Enqueues a task to the queue.
 
         Args:
             task (delayed.task.PyTask or delayed.task.GoTask): The task to be enqueued.
+            relase (bool): Whether to release the previous dequeued task after enqueuing.
         """
         logger.debug('Enqueuing task %s.', task._func_path)
         data = task.serialize()
@@ -84,6 +85,8 @@ class Queue:
             with self._conn.pipeline() as pipe:
                 pipe.rpush(self._name, data)
                 pipe.rpush(self._noti_key, '1')
+                if release:
+                    self._conn.hdel(self._processing_key, self._worker_id)
                 pipe.execute()
             logger.debug('Enqueued task %s.', task._func_path)
         else:  # pragma: no cover

@@ -18,15 +18,17 @@ class PyTask:
             The function path format is "module.path:func_name".
         args (list or tuple): Variable length argument list of the task function.
         kwargs (dict): Arbitrary keyword arguments of the task function.
+        retry (int): The number of retry times. Minus value means retry until succeeds.
     """
 
-    __slots__ = ['_func_path', '_args', '_kwargs', '_data']
+    __slots__ = ['_func_path', '_args', '_kwargs', '_data', '_retry']
 
     def __init__(
         self,
         func: Union[Callable, str],
         args: Union[list, tuple, None] = None,
-        kwargs: Optional[dict] = None
+        kwargs: Optional[dict] = None,
+        retry: int = 0,
     ):
         if isinstance(func, str):
             self._func_path = func
@@ -36,33 +38,36 @@ class PyTask:
             raise ValueError('Invalid func %r' % func)
         self._args = () if args is None else args
         self._kwargs = {} if kwargs is None else kwargs
+        self._retry = retry
         self._data = None
 
     def serialize(self) -> Optional[bytes]:
         """Serializes the task to bytes.
 
         Returns:
-            str: The serialized data.
+            bytes: The serialized data.
         """
         if self._data is None:
-            data = self._func_path, self._args, self._kwargs
+            data = self._func_path, self._args, self._kwargs, self._retry
 
             i = 0
-            if not self._kwargs:
+            if self._retry <= 0:
                 i -= 1
-                if not self._args:
+                if not self._kwargs:
                     i -= 1
+                    if not self._args:
+                        i -= 1
             if i < 0:
                 data = data[:i]
             self._data = packb(data)
         return self._data
 
     @classmethod
-    def deserialize(cls, data) -> 'PyTask':
+    def deserialize(cls, data: bytes) -> 'PyTask':
         """Deserialize a task from the bytes.
 
         Args:
-            data (str): The string to be deserialize.
+            data (bytes): The bytes to be deserialize.
 
         Returns:
             PyTask: The deserialized task.

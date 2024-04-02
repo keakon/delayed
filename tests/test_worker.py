@@ -37,7 +37,7 @@ class TestWorker:
     def test_run(self):
         CONN.delete(QUEUE_NAME, NOTI_KEY, PROCESSING_KEY)
 
-        task = PyTask(func3)
+        task = PyTask(func3, retry=1)
         QUEUE.enqueue(task)
 
         task = PyTask(stop, (os.getpid(),))

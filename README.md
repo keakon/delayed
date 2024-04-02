@@ -50,14 +50,23 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
             from delayed.delay import delayed
 
             delayed = delayed(queue)
+            i = 0
 
             @delayed
             def delayed_add(a, b):
                 return a + b
 
+            @delayed(retry=3)
+            def retry_div(x):
+                global i
+                i += 1
+                return x / (i - 1)
+
             delayed_add.delay(1, 2)  # enqueue delayed_add
             delayed_add.delay(1, b=2)  # same as above
             delayed_add(1, 2)  # call it immediately
+            
+            retry_div.delay(1)  # enqueue retry_div
             ```
         2. Directly enqueue a function:
 
@@ -71,6 +80,8 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
 
             delayed(add).delay(1, 2)
             delayed(add).delay(1, b=2)  # same as above
+            delayed(retry=3)(add).delay(1, b=2)
+            delayed(add, retry=3).delay(1, b=2)  # same as above
             ```
         3. Create a task and enqueue it:
 
@@ -80,7 +91,7 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
             def add(a, b):
                 return a + b
 
-            task = PyTask(func=add, args=(1,), kwargs={'b': 2})
+            task = PyTask(func=add, args=(1,), kwargs={'b': 2}, retry=1)
             queue.enqueue(task)
             ```
         4. Enqueue a predefined task function without importing it (the fastest and lightest way):
@@ -88,7 +99,7 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
             ```python
             from delayed.task import PyTask
 
-            task = PyTask(func='test:add', args=(1,), kwargs={'b': 2})
+            task = PyTask(func='test:add', args=(1,), kwargs={'b': 2}, retry=1)
             queue.enqueue(task)
             ```
     * Enqueue Go tasks:
@@ -176,6 +187,12 @@ A: Adds a `logging.DEBUG` level handler to `delayed.logger.logger`. The simplest
     ```
 
 ## Release notes
+
+* 1.2:
+    1. Adds `retry` param to functions wrapped by `delayed.delay()`.
+    2. Adds `retry` param to `Task()`.
+    3. Adds `release` param to `Queue.enqueue()`.
+    4. The `Worker` won't retry a failed task infinitely by default now. You can set `retry=-1` to `Task()` instead. (BREAKING CHANGE)
 
 * 1.1:
     1. Adds `log_level` param to `delayed.logger.setup_logger()`.

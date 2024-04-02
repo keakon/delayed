@@ -72,24 +72,24 @@ class Worker:
                             logger.exception('Failed to execute task %s.', task._func_path)
 
                             need_retry = False
-                            _, _, exc_traceback = exc_info()
-                            if exc_traceback:
-                                tb_next = exc_traceback.tb_next
-                                if tb_next:
-                                    tb_next2 = tb_next.tb_next
-                                    if tb_next2:
-                                        # invalid call, should not be retried
-                                        need_retry = True
-                                        # delete tracebacks to avoid memory leak
-                                        del tb_next2
-                                    del tb_next
-                                del exc_traceback
+                            if task._retry:
+                                _, _, exc_traceback = exc_info()
+                                if exc_traceback:
+                                    tb_next = exc_traceback.tb_next
+                                    if tb_next:
+                                        tb_next2 = tb_next.tb_next
+                                        if tb_next2:
+                                            # invalid call, should not be retried
+                                            need_retry = True
+                                            # delete tracebacks to avoid memory leak
+                                            del tb_next2
+                                        del tb_next
+                                    del exc_traceback
 
                             if need_retry:
-                                self._requeue_task(task)
+                                self._retry_task(task)
                             else:
                                 self._release_task()
-                            self._release_task()
                         else:
                             self._release_task()
         finally:
@@ -106,17 +106,23 @@ class Worker:
             logger.debug('Stopping worker %d.', self._id)
             self._status = Status.STOPPING
 
-    def _requeue_task(self, task: PyTask):
-        """Requeues a dequeued task.
+    def _retry_task(self, task: PyTask):
+        """Retries a dequeued task.
 
         Args:
-            task (delayed.task.PyTask): The task to be requeued.
+            task (delayed.task.PyTask): The task to be retried.
         """
-        logger.debug('Requeuing task %s', task._func_path)
-        try:
-            self._queue.enqueue(task)
-        except Exception:  # pragma: no cover
-            logger.exception('Failed to requeue task %s', task._func_path)
+        if task._retry:
+            if task._retry > 0:
+                task._retry -= 1
+            task._data = None
+            task.serialize()
+
+            logger.debug('Retrying task %s', task._func_path)
+            try:
+                self._queue.enqueue(task, release=True)
+            except Exception:  # pragma: no cover
+                logger.exception('Failed to retry task %s', task._func_path)
 
     def _release_task(self):
         """Releases the currently dequeued task."""
