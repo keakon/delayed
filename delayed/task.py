@@ -51,7 +51,7 @@ class PyTask:
             data = self._func_path, self._args, self._kwargs, self._retry
 
             i = 0
-            if self._retry <= 0:
+            if self._retry == 0:
                 i -= 1
                 if not self._kwargs:
                     i -= 1

@@ -1,17 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import os
-import signal
-
 from delayed.task import PyTask
 from delayed.queue import Queue
 from delayed.worker import Worker
 
 from .common import CONN, func3, NOTI_KEY, PROCESSING_KEY, QUEUE, QUEUE_NAME, WORKER
-
-
-def stop(pid: int):
-    os.kill(pid, signal.SIGHUP)
 
 
 class TestWorker:
@@ -39,8 +32,7 @@ class TestWorker:
 
         task = PyTask(func3, retry=1)
         QUEUE.enqueue(task)
-
-        task = PyTask(stop, (os.getpid(),))
+        task = PyTask(func3, retry=-1)
         QUEUE.enqueue(task)
 
         WORKER.run()

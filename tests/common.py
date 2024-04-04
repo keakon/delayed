@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import os
+import signal
+
 import redis
 
 from delayed.delay import delayed
@@ -32,5 +35,7 @@ def func2():
 def func3():
     global i
     i += 1
-    if i % 2:
+    if i % 5 == 0:
+        os.kill(os.getpid(), signal.SIGHUP)
+    else:
         raise Exception('error')

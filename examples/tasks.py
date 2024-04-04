@@ -24,6 +24,7 @@ def func2(*args, **kwargs):
     logger.info(os.getpid())
     time.sleep(1)
 
+
 @DELAYED(retry=3)
 def func3():
     global i
