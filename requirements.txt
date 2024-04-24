@@ -1,3 +1,2 @@
-hiredis
 msgpack
-redis>=3.0
+redis[hiredis]
