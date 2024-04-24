@@ -105,16 +105,33 @@ Delayed is a simple but robust task queue inspired by [rq](https://python-rq.org
     * Enqueue Go tasks:
 
         ```python
-            from delayed.task import GoTask
+        from delayed.task import GoTask
 
+        task = GoTask(func_path='syscall.Kill', args=(0, 1))
+        queue.enqueue(task)
+
+        task = GoTask(func_path='fmt.Printf', args=('%d %s\n', [1, 'test']))  # the variadic argument needs to be a list or tuple
+        queue.enqueue(task)
+
+        task = GoTask('fmt.Println', (1, 'test'))  # if the variadic argument is the only argument, it's not required to wrap it with a list or tuple
+        queue.enqueue(task)
+        ```
+    * Enqueue tasks asynchronously:
+
+        ```python
+        from delayed.queue import AsyncQueue
+        from delayed.task import GoTask, PyTask
+        from redis.asyncio import Redis
+
+        conn = Redis()
+        queue = AsyncQueue(name='default', conn=conn)
+
+        async def enqueue():
+            task = PyTask(func='test:add', args=(1,), kwargs={'b': 2}, retry=1)
+            await queue.enqueue(task)
+            
             task = GoTask(func_path='syscall.Kill', args=(0, 1))
-            queue.enqueue(task)
-
-            task = GoTask(func_path='fmt.Printf', args=('%d %s\n', [1, 'test']))  # the variadic argument needs to be a list or tuple
-            queue.enqueue(task)
-
-            task = GoTask('fmt.Println', (1, 'test'))  # if the variadic argument is the only argument, it's not required to wrap it with a list or tuple
-            queue.enqueue(task)
+            await queue.enqueue(task)
         ```
 
 5. Run a task worker (or more) in a separated process:
@@ -186,10 +203,16 @@ A: Adds a `logging.DEBUG` level handler to `delayed.logger.logger`. The simplest
     setup_logger()
     ```
 
+6. **Q: Why isn't there an async version of `delayed()`?  
+A: Because it will convert a sync function to an async function, which breaks the signature of the function.
+
 ## Release notes
 
+* 1.3:
+    1. Implements `AsyncQueue` for enqueueing tasks asynchronously.
+
 * 1.2:
-    1. Adds `retry` param to functions wrapped by `delayed.delay()`.
+    1. Adds `retry` param to functions wrapped by `delayed()`.
     2. Adds `retry` param to `Task()`.
     3. Adds `release` param to `Queue.enqueue()`.
     4. The `Worker` won't retry a failed task infinitely by default now. You can set `retry=-1` to `Task()` instead. (BREAKING CHANGE)
@@ -219,7 +242,7 @@ A: Adds a `logging.DEBUG` level handler to `delayed.logger.logger`. The simplest
     2. Changes the separator between `module_path` and `func_name` from `.` to `:`. (BREAKING CHANGE)
 
 * 0.9:
-    1. Adds `prior` and `error_handler` params to `deleyed.delayed()`, removes its `timeout()` method. (BREAKING CHANGE)
+    1. Adds `prior` and `error_handler` params to `delayed()`, removes its `timeout()` method. (BREAKING CHANGE)
     2. Adds [examples](examples).
 
 * 0.8:
@@ -241,11 +264,11 @@ A: Adds a `logging.DEBUG` level handler to `delayed.logger.logger`. The simplest
     1. Refactories and fixes bugs.
 
 * 0.3:
-    1. Changes param `second` to `timeout` for `delayed.delayed()`. (BREAKING CHANGE)
+    1. Changes param `second` to `timeout` for `delayed()`. (BREAKING CHANGE)
     2. Adds debug log.
 
 * 0.2:
-    1. Adds `timeout()` to `delayed.delayed()`.
+    1. Adds `timeout()` to `delayed()`.
 
 * 0.1:
     1. Init version.

@@ -4,6 +4,7 @@ from math import ceil
 from typing import Optional, Union
 
 import redis
+import redis.asyncio
 
 from .logger import logger
 from .task import GoTask, PyTask
@@ -153,3 +154,38 @@ class Queue:
             logger.debug('Worker %s is online.', self._worker_id)
             return True
         return False
+
+
+class AsyncQueue:
+    """AsyncQueue is the class of an async task queue.
+
+    Args:
+        name (str): The task queue name.
+        conn (redis.asyncio.Redis): An async redis connection.
+    """
+
+    def __init__(
+        self, name: str,
+        conn: redis.asyncio.Redis
+    ):
+        self._name = name
+        self._noti_key = name + _NOTI_KEY_SUFFIX
+        self._processing_key = name + _PROCESSING_KEY_SUFFIX
+        self._conn = conn
+
+    async def enqueue(self, task: Union[GoTask, PyTask]):
+        """Enqueues a task to the queue.
+
+        Args:
+            task (delayed.task.PyTask or delayed.task.GoTask): The task to be enqueued.
+        """
+        logger.debug('Enqueuing task %s.', task._func_path)
+        data = task.serialize()
+        if data:
+            async with self._conn.pipeline(transaction=True) as pipe:
+                pipe.rpush(self._name, data)
+                pipe.rpush(self._noti_key, '1')
+                await pipe.execute()
+            logger.debug('Enqueued task %s.', task._func_path)
+        else:  # pragma: no cover
+            logger.error('Failed to serialize task %s.', task._func_path)

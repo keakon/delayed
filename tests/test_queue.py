@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
+import pytest
+
 from delayed.queue import Queue
 from delayed.task import GoTask, PyTask
 from delayed.worker import Worker
 
-from .common import CONN, func, NOTI_KEY, PROCESSING_KEY, QUEUE, QUEUE_NAME
+from .common import ASYNC_QUEUE, CONN, func, NOTI_KEY, PROCESSING_KEY, QUEUE, QUEUE_NAME
 
 
 class TestQueue:
@@ -147,3 +149,26 @@ class TestQueue:
         assert queue.try_online()
 
         queue.go_offline()
+
+
+class TestAsyncQueue:
+    @pytest.mark.asyncio
+    async def test_enqueue(self):
+        CONN.delete(QUEUE_NAME, NOTI_KEY)
+
+        task = PyTask(func, (1, 2))
+        await ASYNC_QUEUE.enqueue(task)
+        assert CONN.llen(QUEUE_NAME) == 1
+        assert CONN.llen(NOTI_KEY) == 1
+
+        task2 = PyTask('tests.common:func', (1, 2))
+        await ASYNC_QUEUE.enqueue(task2)
+        assert CONN.llen(QUEUE_NAME) == 2
+        assert CONN.llen(NOTI_KEY) == 2
+
+        task3 = GoTask('test.Func', (1, 2))
+        await ASYNC_QUEUE.enqueue(task3)
+        assert CONN.llen(QUEUE_NAME) == 3
+        assert CONN.llen(NOTI_KEY) == 3
+
+        CONN.delete(QUEUE_NAME, NOTI_KEY)

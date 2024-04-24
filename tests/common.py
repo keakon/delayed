@@ -4,9 +4,10 @@ import os
 import signal
 
 import redis
+import redis.asyncio
 
 from delayed.delay import delayed
-from delayed.queue import Queue, _PROCESSING_KEY_SUFFIX, _NOTI_KEY_SUFFIX
+from delayed.queue import AsyncQueue, Queue, _PROCESSING_KEY_SUFFIX, _NOTI_KEY_SUFFIX
 from delayed.worker import Worker
 
 
@@ -15,7 +16,9 @@ NOTI_KEY = QUEUE_NAME + _NOTI_KEY_SUFFIX
 PROCESSING_KEY = QUEUE_NAME + _PROCESSING_KEY_SUFFIX
 
 CONN = redis.Redis()
+ASYNC_CONN = redis.asyncio.Redis()
 QUEUE = Queue(QUEUE_NAME, CONN, 0.01)
+ASYNC_QUEUE = AsyncQueue(QUEUE_NAME, ASYNC_CONN)
 WORKER = Worker(QUEUE)
 DELAYED = delayed(QUEUE)
 
