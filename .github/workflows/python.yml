@@ -42,7 +42,7 @@ jobs:
       run: pytest --timeout=5 --cov delayed
     - name: Upload code coverage report
       if: ${{ matrix.python-version == '3.12' }}
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         verbose: true
     - name: Test without coverage
