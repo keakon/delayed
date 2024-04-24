@@ -148,7 +148,7 @@ class Queue:
         logger.debug('Worker %s is offline.', self._worker_id)
 
     def try_online(self) -> bool:
-        """Try to set the worker of the queue online."""
+        """Trys to set the worker of the queue online."""
         if self._conn.set(self._worker_id, 1, ex=ceil(self._keep_alive_timeout), nx=True):
             logger.debug('Worker %s is online.', self._worker_id)
             return True
