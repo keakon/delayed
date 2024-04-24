@@ -1,5 +1,6 @@
 .*
 *.py[co]
+!.github
 !.gitignore
 !.travis.yml
 bin/
